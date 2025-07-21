@@ -1,6 +1,0 @@
-def load_config():
-    return {
-        "client_id": os.environ["MS_CLIENT_ID"],
-        "tenant_id": os.environ["MS_TENANT_ID"],
-        "scopes": os.environ["MS_SCOPES"].split(",")
-    }

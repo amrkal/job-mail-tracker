@@ -7,13 +7,21 @@ from llm_classifier import configure_openai, classify_response
 from email_parser import parse_emails
 from excel_writer import save_to_excel
 from report_generator import generate_summary_report
+from dotenv import load_dotenv
+
+load_dotenv()
 
 CONFIG_FILE = "config.json"
 TOKEN_FILE = "tokens.json"
 
+import os
+import ast  # for safely parsing list from env string
+
 def load_config():
-    with open(CONFIG_FILE, "r") as f:
-        return json.load(f)
+    return {
+        "output_excel": os.environ.get("OUTPUT_EXCEL", "job_applications.xlsx"),
+        "report_output_folder": os.environ.get("REPORT_OUTPUT_FOLDER", "reports")
+    }
 
 def save_token(token):
     with open(TOKEN_FILE, "w") as f:
@@ -58,15 +66,12 @@ def authenticate_graph(config):
     else:
         raise Exception(f"Authentication failed: {result.get('error_description', result)}")
 
-
 def fetch_job_emails(access_token):
     headers = {
         "Authorization": f"Bearer {access_token}"
     }
 
-    
     since = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%dT%H:%M:%SZ")
-
 
     url = (
         "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages"
@@ -83,9 +88,25 @@ def fetch_job_emails(access_token):
     return response.json().get("value", [])
 
 if __name__ == "__main__":
-    config = load_config()
-    
-    configure_openai(config["openai_api_key"])  # ← THIS MUST BE HERE
+    # 🔐 Load credentials from env
+    openai_key = os.environ["OPENAI_API_KEY"]
+    client_id = os.environ["CLIENT_ID"]
+    tenant_id = os.environ["TENANT_ID"]
+    client_secret = os.environ["CLIENT_SECRET"]
+    scopes = os.environ.get("SCOPES", "Mail.Read").split()
+
+
+
+    # 🤖 Initialize LLM
+    configure_openai(openai_key)
+
+    # 📬 Connect to Microsoft Graph
+    config = {
+        "client_id": client_id,
+        "tenant_id": tenant_id,
+        "client_secret": client_secret,
+        "scopes": scopes,
+    }
 
     access_token = authenticate_graph(config)
     emails = fetch_job_emails(access_token)
@@ -95,14 +116,12 @@ if __name__ == "__main__":
     parsed = []
     for email in emails:
         metadata = parse_emails([email])[0]
-
         metadata["response_type"] = classify_response(metadata["subject"], email.get("bodyPreview", ""))
         parsed.append(metadata)
         print(metadata)
 
     if parsed:
         save_to_excel(parsed)
-        
         generate_summary_report()
     else:
         print("No job-related emails found.")
