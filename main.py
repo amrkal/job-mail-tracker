@@ -4,7 +4,7 @@ import requests
 from datetime import datetime, timedelta
 from datetime import timezone
 from llm_classifier import configure_openai, classify_response
-from email_parser import parse_email_metadata
+from email_parser import parse_emails
 from excel_writer import save_to_excel
 from report_generator import generate_summary_report
 
@@ -94,7 +94,8 @@ if __name__ == "__main__":
 
     parsed = []
     for email in emails:
-        metadata = parse_email_metadata(email)
+        metadata = parse_emails([email])[0]
+
         metadata["response_type"] = classify_response(metadata["subject"], email.get("bodyPreview", ""))
         parsed.append(metadata)
         print(metadata)
