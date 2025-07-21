@@ -1,0 +1,8 @@
+msal
+requests
+openai
+pandas
+openpyxl
+python-dotenv
+pdfkit
+

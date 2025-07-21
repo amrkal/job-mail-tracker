@@ -1,0 +1,8 @@
+# secrets and local files
+tokens.json
+config.json
+*.xlsx
+*.csv
+*.pdf
+.env
+__pycache__/
