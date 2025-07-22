@@ -9,6 +9,7 @@ TOKEN_FILE = "tokens.json"
 def load_config():
     return {
         "client_id": os.environ.get("CLIENT_ID"),
+        "client_secret": os.environ.get("CLIENT_SECRET"),
         "tenant_id": os.environ.get("TENANT_ID"),
         "scopes": os.environ.get("SCOPES", "Mail.Read").split(),
         "output_excel": os.environ.get("OUTPUT_EXCEL", "job_applications.xlsx"),
