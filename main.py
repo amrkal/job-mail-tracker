@@ -22,9 +22,8 @@ def load_config():
         "client_secret": os.environ.get("CLIENT_SECRET"),
         "scopes": os.environ.get("SCOPES", "Mail.Read").split(),
         "output_excel": os.environ.get("OUTPUT_EXCEL", "job_applications.xlsx"),
-        "report_output_folder": os.environ.get("REPORT_OUTPUT_FOLDER", "reports")
+        "report_output_folder": os.environ.get("REPORT_OUTPUT_FOLDER", "reports"),
     }
-
 
 def save_token(token):
     with open(TOKEN_FILE, "w") as f:
@@ -92,19 +91,9 @@ def fetch_job_emails(access_token):
 
 if __name__ == "__main__":
     openai_key = os.environ["OPENAI_API_KEY"]
-    client_id = os.environ["CLIENT_ID"]
-    tenant_id = os.environ["TENANT_ID"]
-    client_secret = os.environ["CLIENT_SECRET"]
-    scopes = os.environ.get("SCOPES", "Mail.Read").split()
-
     configure_openai(openai_key)
 
-    config = {
-        "client_id": client_id,
-        "tenant_id": tenant_id,
-        "client_secret": client_secret,
-        "scopes": scopes,
-    }
+    config = load_config()
 
     access_token = authenticate_graph(config)
     emails = fetch_job_emails(access_token)
