@@ -11,11 +11,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-CONFIG_FILE = "config.json"
 TOKEN_FILE = "tokens.json"
 
 import os
-import ast  # for safely parsing list from env string
 
 def load_config():
     return {
@@ -88,19 +86,14 @@ def fetch_job_emails(access_token):
     return response.json().get("value", [])
 
 if __name__ == "__main__":
-    # 🔐 Load credentials from env
     openai_key = os.environ["OPENAI_API_KEY"]
     client_id = os.environ["CLIENT_ID"]
     tenant_id = os.environ["TENANT_ID"]
     client_secret = os.environ["CLIENT_SECRET"]
     scopes = os.environ.get("SCOPES", "Mail.Read").split()
 
-
-
-    # 🤖 Initialize LLM
     configure_openai(openai_key)
 
-    # 📬 Connect to Microsoft Graph
     config = {
         "client_id": client_id,
         "tenant_id": tenant_id,
