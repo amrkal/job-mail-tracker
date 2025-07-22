@@ -1,8 +1,7 @@
 import json
 import os
-from msal import PublicClientApplication
-from some_module import load_config  # Assumes you defined load_config there using os.environ
-import sys
+from msal import ConfidentialClientApplication  # ✅ Correct import
+
 
 TOKEN_FILE = "tokens.json"
 
@@ -26,9 +25,6 @@ def load_token():
             return json.load(f)
     except FileNotFoundError:
         return None
-    
-
-
 
 def authenticate_graph(config):
     app = ConfidentialClientApplication(
@@ -37,12 +33,31 @@ def authenticate_graph(config):
         authority=f"https://login.microsoftonline.com/{config['tenant_id']}"
     )
 
-    result = app.acquire_token_for_client(scopes=[f"https://graph.microsoft.com/.default"])
+    result = app.acquire_token_for_client(scopes=["https://graph.microsoft.com/.default"])
 
     if "access_token" in result:
+        save_token(result)
         return result["access_token"]
     else:
         raise Exception(f"Authentication failed: {result.get('error_description', result)}")
+
+
+
+
+
+# def authenticate_graph(config):
+#     app = ConfidentialClientApplication(
+#         client_id=config["client_id"],
+#         client_credential=config["client_secret"],
+#         authority=f"https://login.microsoftonline.com/{config['tenant_id']}"
+#     )
+
+#     result = app.acquire_token_for_client(scopes=["https://graph.microsoft.com/.default"])
+
+#     if "access_token" in result:
+#         return result["access_token"]
+#     else:
+#         raise Exception(f"Authentication failed: {result.get('error_description', result)}")
 
 
 # def authenticate_graph(config):
