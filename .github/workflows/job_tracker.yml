@@ -2,7 +2,7 @@ name: Daily Job Tracker
 
 on:
   schedule:
-    - cron: '0 8 * * *' # every day at 08:00 UTC
+    - cron: '0 8 * * *'  # Every day at 08:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -26,7 +26,11 @@ jobs:
         env:
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           TENANT_ID: ${{ secrets.TENANT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SCOPES: "Mail.Read"
+          OUTPUT_EXCEL: "job_applications.xlsx"
+          REPORT_OUTPUT_FOLDER: "reports"
         run: |
           python main.py
 
@@ -35,5 +39,5 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git add job_applications.xlsx reports/
-          git commit -m "📬 Daily job update"
+          git commit -m "📬 Daily job update" || echo "No changes to commit"
           git push
