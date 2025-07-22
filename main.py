@@ -19,7 +19,7 @@ def load_config():
     return {
         "client_id": os.environ.get("CLIENT_ID"),
         "tenant_id": os.environ.get("TENANT_ID"),
-        "client_secret": os.environ.get("CLIENT_SECRET"),
+        #"client_secret": os.environ.get("CLIENT_SECRET"),
         "scopes": os.environ.get("SCOPES", "Mail.Read").split(),
         "output_excel": os.environ.get("OUTPUT_EXCEL", "job_applications.xlsx"),
         "report_output_folder": os.environ.get("REPORT_OUTPUT_FOLDER", "reports"),
