@@ -1,49 +1,45 @@
 import json
+import os
+import sys
 import requests
-from datetime import datetime, timedelta
-from datetime import timezone
+from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
 from llm_classifier import configure_openai, classify_response
 from email_parser import parse_emails
 from excel_writer import save_to_excel
 from report_generator import generate_summary_report
 from auth import authenticate_graph, load_config
 
-from dotenv import load_dotenv
-
 load_dotenv()
 
-TOKEN_FILE = "tokens.json"
-
-import os
-
-def load_config():
-    return {
-        "client_id": os.environ.get("CLIENT_ID"),
-        "tenant_id": os.environ.get("TENANT_ID"),
-        "client_secret": os.environ.get("CLIENT_SECRET"),
-        "scopes": os.environ.get("SCOPES", "Mail.Read").split(),
-        "output_excel": os.environ.get("OUTPUT_EXCEL", "job_applications.xlsx"),
-        "report_output_folder": os.environ.get("REPORT_OUTPUT_FOLDER", "reports"),
-    }
-
-
-def fetch_job_emails(access_token):
+def fetch_job_emails(access_token, user_email, is_ci):
     headers = {
         "Authorization": f"Bearer {access_token}"
     }
 
     since = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    url = (
-        "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages"
-        f"?$filter=receivedDateTime ge {since}&$top=50"
-        "&$select=subject,bodyPreview,receivedDateTime,from"
-    )
+    if is_ci:
+        # App-only auth (client credentials)
+        url = (
+            f"https://graph.microsoft.com/v1.0/users/{user_email}/mailFolders/inbox/messages"
+            f"?$filter=receivedDateTime ge {since}&$top=50"
+            "&$select=subject,bodyPreview,receivedDateTime,from"
+        )
+    else:
+        # Delegated auth (device code flow)
+        url = (
+            f"https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages"
+            f"?$filter=receivedDateTime ge {since}&$top=50"
+            "&$select=subject,bodyPreview,receivedDateTime,from"
+        )
+    
 
     response = requests.get(url, headers=headers)
-
+    print("Fetching from URL:", url)
+    print("Response:", response.status_code, response.text)
     if response.status_code != 200:
-        print("Failed to fetch emails:", response.status_code, response.text)
+        print("❌ Failed to fetch emails:", response.status_code, response.text)
         return []
 
     return response.json().get("value", [])
@@ -53,10 +49,17 @@ if __name__ == "__main__":
     configure_openai(openai_key)
 
     config = load_config()
+    is_ci = os.environ.get("CI") == "true"
+
+    print("Loaded config keys:", config.keys())
+    if is_ci and not config.get("client_secret"):
+        print("❌ CLIENT_SECRET is missing in CI environment.")
+        sys.exit(1)
 
     access_token = authenticate_graph(config)
-    emails = fetch_job_emails(access_token)
+    print("🔑 Partial access token:", access_token, "")  # Do NOT log full token
 
+    emails = fetch_job_emails(access_token, config["user_email"], is_ci)
     print(f"Fetched {len(emails)} emails.")
 
     parsed = []
@@ -71,45 +74,3 @@ if __name__ == "__main__":
         generate_summary_report()
     else:
         print("No job-related emails found.")
-
-
-
-
-
-
-
-
-
-
-
-# def authenticate_graph(config):
-#     app = PublicClientApplication(
-#         config["client_id"],
-#         authority=f"https://login.microsoftonline.com/{config['tenant_id']}"
-#     )
-
-#     accounts = app.get_accounts()
-#     result = None
-
-#     if accounts:
-#         result = app.acquire_token_silent(config["scopes"], account=accounts[0])
-
-#     if not result:
-#         try:
-#             flow = app.initiate_device_flow(scopes=config["scopes"])
-#         except Exception as e:
-#             raise Exception(f"Device flow initiation failed: {str(e)}")
-
-#         if "user_code" not in flow:
-#             raise Exception(f"Device flow failed. Response: {flow}")
-
-#         print("Go to:", flow["verification_uri"])
-#         print("Enter the code:", flow["user_code"])
-
-#         result = app.acquire_token_by_device_flow(flow)
-
-#     if "access_token" in result:
-#         save_token(result)
-#         return result["access_token"]
-#     else:
-#         raise Exception(f"Authentication failed: {result.get('error_description', result)}")
