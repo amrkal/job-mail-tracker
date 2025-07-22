@@ -42,8 +42,8 @@ def authenticate_graph(config):
         if "user_code" not in flow:
             raise Exception(f"Device flow failed. Response: {flow}")
 
-        print("Go to:", flow["verification_uri"])
-        print("Enter the code:", flow["user_code"])
+        print(f"::notice title=Device Login::Go to: {flow['verification_uri']}")
+        print(f"::notice title=Device Login Code::Enter the code: {flow['user_code']}")
 
         result = app.acquire_token_by_device_flow(flow)
 
