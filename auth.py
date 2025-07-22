@@ -45,6 +45,7 @@ def authenticate_graph(config):
         print(f"::notice title=Device Login::Go to: {flow['verification_uri']}")
         print(f"::notice title=Device Login Code::Enter the code: {flow['user_code']}")
 
+
         result = app.acquire_token_by_device_flow(flow)
 
     if "access_token" in result:
