@@ -5,6 +5,16 @@ from some_module import load_config  # Assumes you defined load_config there usi
 
 TOKEN_FILE = "tokens.json"
 
+def load_config():
+    return {
+        "client_id": os.environ.get("CLIENT_ID"),
+        "tenant_id": os.environ.get("TENANT_ID"),
+        "client_secret": os.environ.get("CLIENT_SECRET"),
+        "scopes": os.environ.get("SCOPES", "Mail.Read").split(),
+        "output_excel": os.environ.get("OUTPUT_EXCEL", "job_applications.xlsx"),
+        "report_output_folder": os.environ.get("REPORT_OUTPUT_FOLDER", "reports")
+    }
+
 def save_token(token):
     with open(TOKEN_FILE, "w") as f:
         json.dump(token, f)
