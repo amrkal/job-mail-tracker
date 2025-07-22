@@ -1,12 +1,9 @@
 import json
+import os
 from msal import PublicClientApplication
+from some_module import load_config  # Assumes you defined load_config there using os.environ
 
-CONFIG_FILE = "config.json"
 TOKEN_FILE = "tokens.json"
-
-def load_config():
-    with open(CONFIG_FILE, "r") as f:
-        return json.load(f)
 
 def save_token(token):
     with open(TOKEN_FILE, "w") as f:
