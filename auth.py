@@ -2,6 +2,7 @@ import json
 import os
 from msal import PublicClientApplication
 from some_module import load_config  # Assumes you defined load_config there using os.environ
+import sys
 
 TOKEN_FILE = "tokens.json"
 
@@ -42,8 +43,10 @@ def authenticate_graph(config):
         if "user_code" not in flow:
             raise Exception(f"Device flow failed. Response: {flow}")
 
-        print(f"::notice title=Device Login::Go to: {flow['verification_uri']}")
-        print(f"::notice title=Device Login Code::Enter the code: {flow['user_code']}")
+        print("🔐 DEVICE LOGIN REQUIRED")
+        print("Visit this URL in your browser:", flow["verification_uri"])
+        print("Enter the code:", flow["user_code"])
+        sys.stdout.flush()
 
 
         result = app.acquire_token_by_device_flow(flow)
