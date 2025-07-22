@@ -26,34 +26,52 @@ def load_token():
             return json.load(f)
     except FileNotFoundError:
         return None
+    
+
+
 
 def authenticate_graph(config):
-    app = PublicClientApplication(
-        config["client_id"],
+    app = ConfidentialClientApplication(
+        client_id=config["client_id"],
+        client_credential=config["client_secret"],
         authority=f"https://login.microsoftonline.com/{config['tenant_id']}"
     )
 
-    accounts = app.get_accounts()
-    result = None
-
-    if accounts:
-        result = app.acquire_token_silent(config["scopes"], account=accounts[0])
-
-    if not result:
-        flow = app.initiate_device_flow(scopes=config["scopes"])
-        if "user_code" not in flow:
-            raise Exception(f"Device flow failed. Response: {flow}")
-
-        print("🔐 DEVICE LOGIN REQUIRED")
-        print("Visit this URL in your browser:", flow["verification_uri"])
-        print("Enter the code:", flow["user_code"])
-        sys.stdout.flush()
-
-
-        result = app.acquire_token_by_device_flow(flow)
+    result = app.acquire_token_for_client(scopes=[f"https://graph.microsoft.com/.default"])
 
     if "access_token" in result:
-        save_token(result)
         return result["access_token"]
     else:
         raise Exception(f"Authentication failed: {result.get('error_description', result)}")
+
+
+# def authenticate_graph(config):
+#     app = PublicClientApplication(
+#         config["client_id"],
+#         authority=f"https://login.microsoftonline.com/{config['tenant_id']}"
+#     )
+
+#     accounts = app.get_accounts()
+#     result = None
+
+#     if accounts:
+#         result = app.acquire_token_silent(config["scopes"], account=accounts[0])
+
+#     if not result:
+#         flow = app.initiate_device_flow(scopes=config["scopes"])
+#         if "user_code" not in flow:
+#             raise Exception(f"Device flow failed. Response: {flow}")
+
+#         print("🔐 DEVICE LOGIN REQUIRED")
+#         print("Visit this URL in your browser:", flow["verification_uri"])
+#         print("Enter the code:", flow["user_code"])
+#         sys.stdout.flush()
+
+
+#         result = app.acquire_token_by_device_flow(flow)
+
+#     if "access_token" in result:
+#         save_token(result)
+#         return result["access_token"]
+#     else:
+#         raise Exception(f"Authentication failed: {result.get('error_description', result)}")
