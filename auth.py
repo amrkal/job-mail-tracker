@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import os
 from msal import PublicClientApplication, ConfidentialClientApplication
@@ -18,6 +19,9 @@ def load_config():
     }
 
 def save_token(token):
+    # Add expires_on if missing (valid for 1 hour by default)
+    if "expires_on" not in token:
+        token["expires_on"] = int((datetime.utcnow() + timedelta(hours=1)).timestamp())
     with open(TOKEN_FILE, "w") as f:
         json.dump(token, f)
 
@@ -50,11 +54,22 @@ def authenticate_graph(config):
     )
 
     # ✅ Try token reuse first
+    # ✅ Load cached token and validate expiration
     cached_token = load_token()
     if cached_token and "access_token" in cached_token:
-        # Optionally validate token expiry here
-        return cached_token["access_token"]
+        expires_on = cached_token.get("expires_on")
+        if expires_on:
+            expiry = int(expires_on)
+            now = int(datetime.utcnow().timestamp())
+            if now < expiry - 60:
+                return cached_token["access_token"]
+            else:
+                print("🔁 Cached token expired, re-authenticating...")
+        else:
+            print("⚠️ Cached token has no expiration. Re-authenticating...")
 
+
+            
     accounts = app.get_accounts()
     result = app.acquire_token_silent(config["scopes"], account=accounts[0]) if accounts else None
 
