@@ -1,9 +1,16 @@
 import pandas as pd
 from datetime import datetime
 import os
+import pdfkit
 
 EXCEL_FILE = "job_applications.xlsx"
 REPORTS_DIR = "reports"
+
+
+path_wkhtmltopdf = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+
+
 
 def generate_summary_report():
     if not os.path.exists(EXCEL_FILE):
@@ -34,7 +41,8 @@ def generate_summary_report():
         import pdfkit
         html = df_pending.to_html(index=False)
         pdf_path = os.path.join(REPORTS_DIR, f"job_followup_{today_str}.pdf")
-        pdfkit.from_string(html, pdf_path)
+        #pdfkit.from_string(html, pdf_path, configuration=config)
+        pdfkit.from_string(html, pdf_path, configuration=config)
         print(f"📄 Report saved as: {csv_path} and {pdf_path}")
     except ImportError:
         print(f"✅ CSV report saved: {csv_path} (PDF skipped - install `pdfkit` for PDF output)")
